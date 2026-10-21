@@ -1,10 +1,16 @@
 import kaggle
 from pathlib import Path
 import pandas as pd
+import os
+from urllib.parse import quote_plus
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 RAW_DIR = Path("data/raw")
 RAW_FILE = RAW_DIR / "Patient_Health_Records_Raw.csv"
 PROCESSED_DIR = Path("data/processed")
+
+TABLE_NAME = "patients"
 
 
 def extract():
@@ -78,7 +84,7 @@ def transform(df):
     }
     city_clean = df["city"].str.strip().str.lower().map(city_map)
     unrecognized = df["city"].notna() & city_clean.isna()
-    # print(f"{unrecognized.sum()} unrecognized city values")
+    assert unrecognized.sum() == 0, "unknown city spelling found"
     df["city"] = city_clean
 
 
@@ -220,10 +226,23 @@ def transform(df):
 
 
 def load(df):
+    # save a CSV copy so you can check the result in Excel
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     df.to_csv(PROCESSED_DIR / "clean_patients.csv", index=False)
     print("Saved cleaned data to data/processed/clean_patients.csv")
 
+    # write the table into PostgreSQL
+    load_dotenv()
+    user = os.getenv("DB_USER")
+    password = quote_plus(os.getenv("DB_PASSWORD"))
+    host = os.getenv("DB_HOST")
+    port = os.getenv("DB_PORT")
+    name = os.getenv("DB_NAME")
+
+    url = f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{name}"
+    engine = create_engine(url)
+    df.to_sql(TABLE_NAME, engine, if_exists="replace", index=False)
+    print(f"Loaded {len(df)} rows into table '{TABLE_NAME}'")
 
 if __name__ == "__main__":
     extract()

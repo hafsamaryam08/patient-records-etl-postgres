@@ -52,7 +52,7 @@ Blank values in numeric columns are stored as `NULL` in PostgreSQL. Blank values
 
 These patterns are in the source data. The cleaning code makes the data usable, but it can't make the underlying values realistic.
 
-- **Placeholder values.** Several columns contain a value repeated far more often than any real measurement would be. Examples: 22.5 for BMI (2,610 rows), 120/80 for blood pressure (over 6,000 rows across its formats), and 80 for heart rate (about half the valid readings came from the word "eighty"). These look like defaults filled in by the dataset generator.
+- **Placeholder values.** Several columns contain a value repeated far more often than any real measurement would be. BMI is dominated by a single default around 22: 22.5 appears 2,610 times, and 2,467 raw entries read “22kg/m2”, which becomes 22.0 after the unit is removed. Blood pressure shows 120/80 about 6,000 times across its three formats. About half of the valid heart rates (2,459 of 5,033) came from the word “eighty”, which became 80. These look like defaults filled in by the dataset generator.
 - **Fake extremes.** Ages of -5 and 250 appear about 2,500 times each. Heart rates of 0 and 500 appear about 2,500 times each. They were removed, not corrected.
 - **Cholesterol values.** Only two numeric values exist (190 and 250), so the category column has no borderline entries.
 - **Inconsistent records.** Diagnosis codes and medications don't match each other clinically. For example, a patient can have a cholera code (A00) and be on metformin. This data should be used to practise pipelines, not to draw medical conclusions.
